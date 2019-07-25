@@ -12,7 +12,9 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.TokenGranter;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
+import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
@@ -54,6 +56,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .allowFormAuthenticationForClients()
                 .tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()");
+       // TokenEndpoint
     }
 
     @Override
@@ -63,7 +66,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .withClient("test")
                 .scopes("all")
                 .secret("test")
-                .authorizedGrantTypes("password", "authorization_code", "refresh_token","custom");
+                .authorizedGrantTypes("password", "authorization_code", "refresh_token","custom","sms_code");
 
     }
     @Bean
@@ -75,15 +78,18 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public WebResponseExceptionTranslator webResponseExceptionTranslator(){
         return new MssWebResponseExceptionTranslator();
     }
-
+    @Autowired
+    private TokenGranter tokenGranter;
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.tokenStore(tokenStore())
+        endpoints
+                .tokenGranter(tokenGranter) // 四种授权模式+刷新令牌的模式+自定义授权模式
+                .tokenStore(tokenStore())
                 .userDetailsService(userDetailService)
-                .authenticationManager(authenticationManager);
-        endpoints.tokenServices(defaultTokenServices());
-        //认证异常翻译
-        // endpoints.exceptionTranslator(webResponseExceptionTranslator());
+                .authenticationManager(authenticationManager)
+                .tokenServices(defaultTokenServices())
+                //认证异常翻译
+                .exceptionTranslator(webResponseExceptionTranslator());
     }
 
     /**

@@ -1,5 +1,6 @@
 package cn.hoarfrost.security.demo.security;
 
+import cn.hoarfrost.security.demo.security.provider.SmsCodeAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +40,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/oauth/**").authenticated()
                 .and()
                 .csrf().disable();
+
+
+        SmsCodeAuthenticationProvider smsCodeAuthenticationProvider = new SmsCodeAuthenticationProvider();
+        smsCodeAuthenticationProvider.setUserDetailsService(userDetailService);
+        http.authenticationProvider(smsCodeAuthenticationProvider);
     }
 
     @Override
